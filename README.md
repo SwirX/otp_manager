@@ -82,4 +82,4 @@ Contributions are welcome! Please open an issue or a pull request if you have an
 
 ## License
 
-This package is licensed under the BSD 3-clause LICENCE. See the [LICENCE](https://github.com/SwirX/otp-manager/main/blob/Licence) file for more information.
+This package is licensed under the BSD 3-clause LICENCE. See the [LICENCE](https://github.com/SwirX/otp_manager/blob/main/LICENSE) file for more information.
