@@ -1,0 +1,23 @@
+name: otp_manager
+description: "A Flutter package for managing Time-Based One-Time Password (TOTP) codes."
+version: 0.0.1
+homepage:
+license: BSD-3-Clause
+
+environment:
+  sdk: ^3.5.0
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_secure_storage: ^9.2.2
+  otp: ^3.1.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+
