@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
@@ -6,6 +7,27 @@ import 'package:otp/otp.dart';
 
 class OTPManager {
   final secStorage = const FlutterSecureStorage();
+  final List<OTPEntry> _otps = [];
+  final StreamController<List<OTPEntry>> _otpStreamController =
+      StreamController.broadcast();
+  Timer? _updateTimer;
+
+  Stream<List<OTPEntry>> get otpStream => _otpStreamController.stream;
+
+  OTPManager() {
+    _startUpdateTimer();
+  }
+
+  void _startUpdateTimer() {
+    _updateTimer = Timer.periodic(Duration(seconds: 1), (_) {
+      _emitUpdatedOTPs();
+    });
+  }
+
+  void _emitUpdatedOTPs() async {
+    final otpList = await getAllOTP();
+    _otpStreamController.add(otpList);
+  }
 
   Future<List<OTPEntry>> getAllOTP() async {
     try {
@@ -35,11 +57,46 @@ class OTPManager {
       await secStorage.write(
           key: "otps",
           value: jsonEncode(otpList.map((e) => e.toJson()).toList()));
+
+      _emitUpdatedOTPs(); // Notify listeners of the update
     } catch (e) {
       if (kDebugMode) {
         print("Error adding OTP to storage: $e");
       }
       throw Exception("Failed to add OTP");
+    }
+  }
+
+  Future<void> removeOTP(String secret) async {
+    try {
+      final otpList = await getAllOTP();
+      otpList.removeWhere((entry) => entry.secret == secret);
+      await secStorage.write(
+          key: "otps",
+          value: jsonEncode(otpList.map((e) => e.toJson()).toList()));
+      _emitUpdatedOTPs();
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error removing OTP from storage");
+      }
+      throw Exception("Failed to remove otp");
+    }
+  }
+
+  Future<void> editOTP(
+      String secret, String? title, String? accountName) async {
+    try {
+      final otpList = await getAllOTP();
+      final otp = otpList.firstWhere((entry) => entry.secret == secret);
+      await removeOTP(secret);
+      title = title ?? otp.title;
+      accountName = accountName ?? otp.accountName!;
+      addOTP(title, accountName, secret);
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error Editing OTP");
+      }
+      throw Exception("Failed to edit the OTP");
     }
   }
 
@@ -122,9 +179,9 @@ class OTPCodes {
 }
 
 class OTPEntry {
-  final String title;
   final String secret;
   final int? period;
+  String title;
   String? accountName;
 
   OTPEntry(this.title, this.accountName, this.secret, {this.period = 30}) {
