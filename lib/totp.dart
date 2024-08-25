@@ -138,24 +138,16 @@ class OTPGenerator {
   /// Generates the current OTP code based on the current time.
   String _getCurrentCode() {
     final currentTimestamp = DateTime.now().millisecondsSinceEpoch;
-    return OTP.generateTOTPCodeString(
-      secret,
-      currentTimestamp,
-      interval: interval,
-      isGoogle: true
-    );
+    return OTP.generateTOTPCodeString(secret, currentTimestamp,
+        algorithm: Algorithm.SHA1, interval: interval, isGoogle: true);
   }
 
   /// Generates the next OTP code that will be valid after the current one expires.
   String _getNextCode() {
     final nextTimestamp =
-        DateTime.now().millisecondsSinceEpoch + interval * 1000;
-    return OTP.generateTOTPCodeString(
-      secret,
-      nextTimestamp,
-      interval: interval,
-      isGoogle: true
-    );
+        DateTime.now().millisecondsSinceEpoch + (interval * 1000);
+    return OTP.generateTOTPCodeString(secret, nextTimestamp,
+        algorithm: Algorithm.SHA1, interval: interval, isGoogle: true);
   }
 
   /// Returns the time left (in seconds) before the current OTP code expires.
