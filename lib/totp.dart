@@ -22,11 +22,16 @@ class OTPManager {
     }
   }
 
-  Future<void> addOTP(String title, String accountName, String secret) async {
+  Future<void> addOTP(String title, String accountName, String secret,
+      {int period = 30}) async {
     try {
       final otpList = await getAllOTP();
-      otpList.add(
-          OTPEntry(title: title, accountName: accountName, secret: secret));
+      otpList.add(OTPEntry(
+        title,
+        accountName,
+        secret,
+        period: period,
+      ));
       await secStorage.write(
           key: "otps",
           value: jsonEncode(otpList.map((e) => e.toJson()).toList()));
@@ -118,11 +123,15 @@ class OTPCodes {
 
 class OTPEntry {
   final String title;
-  final String accountName;
   final String secret;
+  final int? period;
+  String? accountName;
 
-  OTPEntry(
-      {required this.title, required this.accountName, required this.secret});
+  OTPEntry(this.title, this.accountName, this.secret, {this.period = 30}) {
+    if (this.accountName == null) {
+      accountName = title;
+    }
+  }
 
   /// Converts an OTPEntry to a JSON map.
   Map<String, dynamic> toJson() => {
@@ -133,8 +142,8 @@ class OTPEntry {
 
   /// Creates an OTPEntry from a JSON map.
   factory OTPEntry.fromJson(Map<String, dynamic> json) => OTPEntry(
-        title: json['title'],
-        accountName: json['accountName'],
-        secret: json['secret'],
+        json['title'],
+        json['accountName'],
+        json['secret'],
       );
 }
