@@ -7,7 +7,6 @@ import 'package:otp/otp.dart';
 
 class OTPManager {
   final secStorage = const FlutterSecureStorage();
-  final List<OTPEntry> _otps = [];
   final StreamController<List<OTPEntry>> _otpStreamController =
       StreamController.broadcast();
   Timer? _updateTimer;
@@ -44,8 +43,15 @@ class OTPManager {
     }
   }
 
-  Future<void> addOTP(String title, String accountName, String secret,
-      {int period = 30}) async {
+  Future<void> addOTP(
+    String title,
+    String accountName,
+    String secret, {
+    int period = 30,
+    String algorithm = "SHA1",
+    int digits = 6,
+    String type = "TOTP",
+  }) async {
     try {
       final otpList = await getAllOTP();
       otpList.add(OTPEntry(
@@ -53,6 +59,9 @@ class OTPManager {
         accountName,
         secret,
         period: period,
+        algorithm:
+            Algorithm.values.firstWhere((algo) => algo.name == algorithm),
+        digits: digits,
       ));
       await secStorage.write(
           key: "otps",
@@ -90,7 +99,7 @@ class OTPManager {
       final otp = otpList.firstWhere((entry) => entry.secret == secret);
       await removeOTP(secret);
       title = title ?? otp.title;
-      accountName = accountName ?? otp.accountName!;
+      accountName = accountName ?? otp.accountName;
       addOTP(title, accountName, secret);
     } catch (e) {
       if (kDebugMode) {
@@ -132,22 +141,40 @@ class OTPManager {
 class OTPGenerator {
   final String secret;
   final int interval;
+  final Algorithm algorithm;
+  final int digits;
 
-  OTPGenerator({required this.secret, this.interval = 30});
+  OTPGenerator(
+      {required this.secret,
+      this.interval = 30,
+      this.algorithm = Algorithm.SHA1,
+      this.digits = 6});
 
   /// Generates the current OTP code based on the current time.
   String _getCurrentCode() {
     final currentTimestamp = DateTime.now().millisecondsSinceEpoch;
-    return OTP.generateTOTPCodeString(secret, currentTimestamp,
-        algorithm: Algorithm.SHA1, interval: interval, isGoogle: true);
+    return OTP.generateTOTPCodeString(
+      secret,
+      currentTimestamp,
+      algorithm: algorithm,
+      interval: interval,
+      isGoogle: true,
+      length: digits,
+    );
   }
 
   /// Generates the next OTP code that will be valid after the current one expires.
   String _getNextCode() {
     final nextTimestamp =
         DateTime.now().millisecondsSinceEpoch + (interval * 1000);
-    return OTP.generateTOTPCodeString(secret, nextTimestamp,
-        algorithm: Algorithm.SHA1, interval: interval, isGoogle: true);
+    return OTP.generateTOTPCodeString(
+      secret,
+      nextTimestamp,
+      algorithm: algorithm,
+      interval: interval,
+      isGoogle: true,
+      length: digits,
+    );
   }
 
   /// Returns the time left (in seconds) before the current OTP code expires.
@@ -174,15 +201,20 @@ class OTPCodes {
 
 class OTPEntry {
   final String secret;
-  final int? period;
+  final int period;
+  final int digits;
+  final Algorithm algorithm;
   String title;
-  String? accountName;
+  String accountName;
 
-  OTPEntry(this.title, this.accountName, this.secret, {this.period = 30}) {
-    if (this.accountName == null) {
-      accountName = title;
-    }
-  }
+  OTPEntry(
+    this.title,
+    this.accountName,
+    this.secret, {
+    this.period = 30,
+    this.digits = 6,
+    this.algorithm = Algorithm.SHA1,
+  });
 
   /// Converts an OTPEntry to a JSON map.
   Map<String, dynamic> toJson() => {
