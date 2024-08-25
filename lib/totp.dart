@@ -142,6 +142,7 @@ class OTPGenerator {
       secret,
       currentTimestamp,
       interval: interval,
+      isGoogle: true
     );
   }
 
@@ -153,6 +154,7 @@ class OTPGenerator {
       secret,
       nextTimestamp,
       interval: interval,
+      isGoogle: true
     );
   }
 
