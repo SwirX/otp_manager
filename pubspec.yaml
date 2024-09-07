@@ -9,10 +9,12 @@ environment:
   flutter: ">=1.17.0"
 
 dependencies:
+  encrypt: ^5.0.3
   flutter:
     sdk: flutter
   flutter_secure_storage: ^9.2.2
   otp: ^3.1.4
+  pointycastle: ^3.9.1
 
 dev_dependencies:
   flutter_test:
