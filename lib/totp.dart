@@ -227,7 +227,7 @@ class OTPManager {
     } else {
       // The file is unencrypted, treat it as plain text
       final otpString = utf8.decode(fileBytes);
-      final List<Map<String, dynamic>> otps = jsonDecode(otpString);
+      final List otps = jsonDecode(otpString);
       final otpsObj = otps.map((e) => OTPEntry.fromJson(e)).toList();
       await bulkAdd(otpsObj);
     }
